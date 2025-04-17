@@ -1,0 +1,68 @@
+/* About.css */
+
+.about-section {
+    padding: 60px 20px;
+    text-align: center;
+    justify-content: center;
+    background: #f8f9fa;
+    color: #333;
+}
+
+.about-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    max-width: 900px;
+    margin: auto;
+}
+/* .start{
+    margin-left: 15rem;
+} */
+.start p{
+    margin-left: 5rem;
+}
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.mission, .why-choose-us {
+    background: white;
+    padding: 40px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 800px;
+}
+
+h2 {
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    font-size: 1.2rem;
+    margin: 10px 0;
+    text-align: left;
+    padding-left: 15px;
+    position: relative;
+}
+
+ul li::before {
+    content: '✔';
+    position: absolute;
+    left: 0;
+    color: #ff9800;
+    font-weight: bold;
+}
