@@ -17,7 +17,7 @@ const Home = () => {
           Find reliable professionals for cooking, caretaking, cleaning, and more.
           Quality service, verified experts, and hassle-free bookings at your fingertips.
         </p>
-        <a href="/services" className="btn">Explore Services</a>
+        <a href="#services" className="btn">Explore Services</a>
       </div>
 
       {/* Why Choose Us Section */}
