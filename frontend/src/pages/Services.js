@@ -1,7 +1,13 @@
 import React from "react";
 import "./Services.css";
+import { useNavigate } from "react-router-dom";
+
+import {Link} from 'react-router-dom';
+
 
 const Services = () => {
+    const navigate = useNavigate();
+
     const services = [
         {
             _id: 1,
@@ -55,7 +61,9 @@ const Services = () => {
                             <div className="service-info">
                                 <h3>{service.name}</h3>
                                 <p>{service.description}</p>
-                                <button className="btn">Book Now</button>
+                                <button className="btn" onClick={() => navigate(`/booking/${service._id}`)}>Book Now</button>
+
+                                
                             </div>
                         </div>
                     ))}

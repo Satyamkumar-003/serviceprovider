@@ -1,15 +1,22 @@
+import express from "express";
+const router =express.Router();
+import {body,validationResult} from "express-validator";
+// const {body, validationResult}=require("express-validator");
+const jwtSecretkey="mynameissatyamkumariamdeveloper";
+
+
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 export const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email,phoneno, password } = req.body;
     try {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ message: "User already exists" });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ name, email, password: hashedPassword });
+        const newUser = new User({ name, email,phoneno, password: hashedPassword });
 
         await newUser.save();
         res.status(201).json({ message: "User registered successfully" });

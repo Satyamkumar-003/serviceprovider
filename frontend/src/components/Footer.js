@@ -1,22 +1,58 @@
-import React from 'react';
-import './Footer.css';
+import React from "react";
+import "./Footer.css";
+import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 
 function Footer() {
   return (
     <footer className="footer">
       <div className="footer-container">
-        <p>&copy; 2025 HomeHelper. All rights reserved.</p>
-        <div className="footer-links">
-          <a href="/privacy-policy">Privacy Policy</a>
-          <a href="/terms">Terms of Service</a>
-          <a href="/contact">Contact Us</a>
+
+        {/* Brand Section */}
+        <div className="footer-section brand">
+          <h2>HomeHelper</h2>
+          <p>Your trusted partner for home services anytime, anywhere.</p>
         </div>
-        <div className="social-icons">
-          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-facebook"></i></a>
-          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-twitter"></i></a>
-          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-instagram"></i></a>
-          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"><i className="fab fa-linkedin"></i></a>
+
+        {/* Quick Links */}
+        <div className="footer-section">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/services">Services</a></li>
+            <li><a href="/about">About Us</a></li>
+            <li><a href="/contact">Contact</a></li>
+          </ul>
         </div>
+
+        {/* Services Section */}
+        <div className="footer-section">
+          <h3>Services</h3>
+          <ul>
+            <li><a href="/services/cleaning">Home Cleaning</a></li>
+            <li><a href="/services/plumbing">Plumbing</a></li>
+            <li><a href="/services/electrician">Electrician</a></li>
+            <li><a href="/services/cooking">Cooking</a></li>
+          </ul>
+        </div>
+
+        {/* Contact + Social */}
+        <div className="footer-section contact">
+          <h3>Contact</h3>
+          <p>📍 Patiala,Punjab, India</p>
+          <p>📞 +91 81466 11766</p>
+          <p>📩 support@homehelper.com</p>
+
+          <div className="social-icons">
+            <a href="#"><FaFacebookF /></a>
+            <a href="#"><FaTwitter /></a>
+            <a href="#"><FaInstagram /></a>
+            <a href="#"><FaLinkedinIn /></a>
+          </div>
+        </div>
+      </div>
+
+      <div className="footer-bottom">
+        <p>© 2025 HomeHelper. All Rights Reserved.</p>
       </div>
     </footer>
   );

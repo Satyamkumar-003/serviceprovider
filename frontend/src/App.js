@@ -8,6 +8,7 @@ import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import Login from "./components/Login";
 import './Global.css';
+import BookingPage from "./pages/BookingPage";
 
 function App() {
   return (
@@ -26,7 +27,9 @@ function App() {
                 <Contact />
               </>
             } />
+            <Route path="/booking/:id" element={<BookingPage />} />
             <Route path="/login" element={<Login />} />
+            
           </Routes>
         </main>
 
