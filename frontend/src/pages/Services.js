@@ -2,7 +2,7 @@ import React from "react";
 import "./Services.css";
 import { useNavigate } from "react-router-dom";
 
-import {Link} from 'react-router-dom';
+// import {Link} from 'react-router-dom';
 
 
 const Services = () => {
