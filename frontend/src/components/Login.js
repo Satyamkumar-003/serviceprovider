@@ -1,48 +1,86 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-// import Navbar from "./Navbar";
+// import { Link } from "react-router-dom";
 import "./Login.css";
+import {Link, useNavigate} from "react-router-dom";
 
 export default function Login() {
+  const navigate=useNavigate();
   const [isSignup, setIsSignup] = useState(false);
 
-  const [credentials,setcredentials]=useState({
-    name:"",
-    email:"",
-    phoneno:"",
-    password:""
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
   });
 
-  const handlesubmit= async(e)=>{
+  const [signupData, setSignupData] = useState({
+    name: "",
+    email: "",
+    phoneno: "",
+    password: "",
+  });
+
+  // ✅ Signup function
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const  response=await fetch(`http://localhost:5000/api/users/register`,{
-      method: 'POST',
+    const response = await fetch("http://localhost:5000/api/users/register", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        name: credentials.name,
-        email: credentials.email,
-        phoneno: credentials.phoneno,
-        password : credentials.password
-
-      })
+      body: JSON.stringify(signupData),
     });
 
-    const json=await response.json();
+    const json = await response.json();
     console.log(json);
-    if(json.success){
-      alert(" you have successfully signed up");
-    }else if(json.error){
-      alert("validation error: "+ json.error[0].msg);
-    }else{
-      alert("enter valid credentails");
+
+    if (response.ok) {
+      alert("You have successfully signed up");
+      navigate("/login");
+    } else {
+      alert(json.message || "Enter valid details");
     }
   };
 
-  const onchange=(event)=>{
-    setcredentials({...credentials,[event.target.name]:event.target.value});
+  // ✅ Signup onChange
+  const onSignupChange = (event) => {
+    setSignupData({
+      ...signupData,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+  // ✅ Login function
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    const response = await fetch("http://localhost:5000/api/users/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(loginData),
+    });
+
+    const json = await response.json();
+    console.log(json);
+
+    if (response.ok) {
+      alert("Login Successful!");
+      localStorage.setItem("token", json.token);
+      localStorage.setItem("user", JSON.stringify(json.user)); // ✅ Store user data
+      navigate("/");
+    } else {
+      alert(json.message || "Invalid login details");
+    }
+  };
+
+  // ✅ Login onChange
+  const onLoginChange = (event) => {
+    setLoginData({
+      ...loginData,
+      [event.target.name]: event.target.value,
+    });
   };
 
   return (
@@ -63,22 +101,68 @@ export default function Login() {
           </button>
         </div>
 
-        <form onSubmit={handlesubmit} className="auth-form">
-          {isSignup && (
+        {/* ✅ Form handles signup only */}
+        <form onSubmit={isSignup ? handleSubmit : handleLogin} className="auth-form">
+          {isSignup ? (
             <>
-              <input type="text" placeholder="User Name"  id="name" name="name" value={credentials.name} onChange={onchange} required />
-              <input type="email" placeholder="Email" id="email" name="email" value={credentials.email} onChange={onchange} required />
-              <input type="text" placeholder="Phone Number" id="phoneno" name="phoneno" value={credentials.phonno} onChange={onchange} required />
-              <input type="password" placeholder="Password" id="password" name="password" value={credentials.password} onChange={onchange} required />
-              <button type="submit">Sign Up</button>
-              <Link to="/Login" className="">already a user</Link>
-            </>
-          )}
+              <input
+                type="text"
+                placeholder="User Name"
+                name="name"
+                value={signupData.name}
+                onChange={onSignupChange}
+                required
+              />
 
-          {!isSignup && (
+              <input
+                type="email"
+                placeholder="Email"
+                name="email"
+                value={signupData.email}
+                onChange={onSignupChange}
+                required
+              />
+
+              <input
+                type="text"
+                placeholder="Phone Number"
+                name="phoneno"
+                value={signupData.phoneno}
+                onChange={onSignupChange}
+                required
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                name="password"
+                value={signupData.password}
+                onChange={onSignupChange}
+                required
+              />
+
+              <button type="submit">Sign Up</button>
+            </>
+          ) : (
             <>
-              <input type="email" placeholder="Email" required />
-              <input type="password" placeholder="Password" required />
+              <input
+                type="email"
+                placeholder="Email"
+                name="email"
+                value={loginData.email}
+                onChange={onLoginChange}
+                required
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                name="password"
+                value={loginData.password}
+                onChange={onLoginChange}
+                required
+              />
+
               <button type="submit">Login</button>
             </>
           )}

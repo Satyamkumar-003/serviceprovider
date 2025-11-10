@@ -9,6 +9,9 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+#logoutbtn{
+  background-color: rgba(203, 8, 8, 0.868);
+}
 /* Navbar container */
 .navbar {
   background-color: #ffffff;
@@ -233,4 +236,21 @@ body {
     padding: 6px 12px;
     font-size: 0.85rem;
   }
+}
+.welcome-text{
+  font-size: large;
+}
+
+.logout-btn {
+  background: #e63946;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 6px;
+  color: white;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #c32e39;
 }
