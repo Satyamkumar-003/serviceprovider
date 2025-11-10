@@ -23,7 +23,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const response = await fetch("http://localhost:5000/api/users/register", {
+    const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/users/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -54,7 +54,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const response = await fetch("http://localhost:5000/api/users/login", {
+    const response = await fetch(`${process.env.REACT_APP_BASE_URL}/api/users/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
