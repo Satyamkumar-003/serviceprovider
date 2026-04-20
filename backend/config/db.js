@@ -1,15 +1,19 @@
 import mongoose from "mongoose";
-// const mongoose = require('mongoose');
-import dotenv from "dotenv";
-
-const mongouri=process.env.MONGO_URI;
 
 const connectDB = async () => {
+    const uri = process.env.MONGO_URI;
+    if (!uri) {
+        console.error("MONGO_URI is not set. Aborting startup.");
+        process.exit(1);
+    }
+
     try {
-        const conn = await mongoose.connect(process.env.MONGO_URI);
+        const conn = await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 10000,
+        });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
-        console.error(`Error: ${error.message}`);
+        console.error(`MongoDB connection error: ${error.message}`);
         process.exit(1);
     }
 };
