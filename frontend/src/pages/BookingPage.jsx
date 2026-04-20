@@ -1,322 +1,589 @@
-// src/pages/BookingPage.jsx
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+    FiArrowLeft,
+    FiCheckCircle,
+    FiClock,
+    FiShield,
+    FiInfo,
+} from "react-icons/fi";
+
+import { findServiceBySlug } from "../data/serviceCatalog";
+import { api, isAuthed } from "../data/api";
 import "./BookingPage.css";
 
-/**
- * Temporary local services data.
- * In production you can fetch this from your backend (e.g. /api/services/:id).
- */
-const SERVICES = [
-  { id: "1", key: 1, name: "Cooking Service", short: "Hire professional chefs for daily meals and events.", basePrice: 499, durationMins: 60, image: "/img7.jpg" },
-  { id: "2", key: 2, name: "Caretaker Service", short: "Trained caretakers for elderly/child/special needs.", basePrice: 699, durationMins: 60, image: "/img4.jpg" },
-  { id: "3", key: 3, name: "Home Cleaning", short: "Expert cleaning for all rooms, bathrooms & kitchens.", basePrice: 499, durationMins: 60, image: "/img3.jpg" },
-  { id: "4", key: 4, name: "Electrician", short: "Certified electricians for wiring, repairs & maintenance.", basePrice: 399, durationMins: 60, image: "/img2.jpg" },
-  { id: "5", key: 5, name: "Plumbing", short: "Quick and reliable plumbing solutions for home needs.", basePrice: 399, durationMins: 60, image: "/img5.jpg" },
-];
+const FALLBACK_IMG = `${process.env.PUBLIC_URL}/img1.jpg`;
 
-const todayDateISO = () => {
-  const d = new Date();
-  // default min date is today
-  return d.toISOString().split("T")[0];
-};
-
-export default function BookingPage() {
-  const { id } = useParams(); // expects /book/:id
-  const navigate = useNavigate();
-
-  // Try to find service from local list (or fetch from backend)
-  const [service, setService] = useState(() => SERVICES.find(s => String(s.id) === String(id)) || null);
-
-  // Form state
-  const [form, setForm] = useState({
-    fullName: "",
-    phone: "",
-    address: "",
-    pincode: "",
-    date: todayDateISO(),
-    timeSlot: "",
-    packageType: "standard",
-    addons: {}, // { addonKey: true }
-    notes: ""
-  });
-
-  const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(null);
-
-  useEffect(() => {
-    // If service not found locally, you would fetch from backend:
-    // fetch(`/api/services/${id}`).then(...)
-    if (!service) {
-      const found = SERVICES.find(s => String(s.id) === String(id));
-      setService(found || null);
-    }
-  }, [id, service]);
-
-  if (!service) {
-    return (
-      <div className="booking-page">
-        <div className="container">
-          <h2>Service not found</h2>
-          <p>The requested service doesn't exist. Please go back and choose a service.</p>
-          <button className="btn" onClick={() => navigate("/")}>Back to Home</button>
-        </div>
-      </div>
-    );
-  }
-
-  const timeSlots = [
+const TIME_SLOTS = [
     "09:00 - 11:00",
     "11:00 - 13:00",
     "13:00 - 15:00",
     "15:00 - 17:00",
-    "17:00 - 19:00"
-  ];
+    "17:00 - 19:00",
+];
 
-  const addonsList = [
+const ADDONS = [
     { key: "deepClean", label: "Deep Cleaning", price: 299 },
     { key: "sofaShampoo", label: "Sofa Shampoo", price: 199 },
-    { key: "kitchenDegrease", label: "Kitchen Degrease", price: 249 }
-  ];
+    { key: "kitchenDegrease", label: "Kitchen Degrease", price: 249 },
+];
 
-  const onChange = e => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
+const PACKAGE_PRICE_DELTA = { standard: 0, premium: 299 };
 
-  const onToggleAddon = (key) => {
-    setForm(prev => {
-      const newAddons = { ...prev.addons };
-      newAddons[key] = !newAddons[key];
-      return { ...prev, addons: newAddons };
-    });
-  };
+const todayISO = () => new Date().toISOString().split("T")[0];
 
-  const validate = () => {
-    const errs = {};
-    if (!form.fullName.trim()) errs.fullName = "Full name is required";
-    if (!/^[6-9]\d{9}$/.test(form.phone)) errs.phone = "Enter a valid 10-digit Indian phone number";
-    if (!form.address.trim()) errs.address = "Address is required";
-    if (!/^\d{6}$/.test(form.pincode)) errs.pincode = "Enter 6 digit PIN code";
-    if (!form.date) errs.date = "Please select a date";
-    // ensure date is not in the past
-    if (form.date && new Date(form.date) < new Date(todayDateISO())) errs.date = "Date cannot be in the past";
-    if (!form.timeSlot) errs.timeSlot = "Please choose a time slot";
-    return errs;
-  };
+// Map a "HH:MM - HH:MM" slot + a YYYY-MM-DD date into an ISO datetime
+// (uses the START of the window, in the user's local timezone).
+function toScheduledAt(dateStr, slotStr) {
+    const [start] = slotStr.split("-").map((s) => s.trim());
+    const [h, m] = start.split(":").map((n) => parseInt(n, 10));
+    const d = new Date(dateStr);
+    d.setHours(h, m, 0, 0);
+    return d.toISOString();
+}
 
-  const calcTotal = () => {
-    let total = Number(service.basePrice || 0);
-    for (const addon of addonsList) {
-      if (form.addons[addon.key]) total += addon.price;
+async function findBackendServiceId(serviceName) {
+    try {
+        const list = await api.get("/api/services");
+        if (!Array.isArray(list)) return null;
+        const target = serviceName.toLowerCase().trim();
+        const match = list.find(
+            (s) => String(s.name).toLowerCase().trim() === target
+        );
+        return match ? match._id : null;
+    } catch {
+        return null;
     }
-    return total;
-  };
+}
 
-  const onSubmit = (e) => {
-    e.preventDefault();
-    const errs = validate();
-    setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+export default function BookingPage() {
+    const { id: slug } = useParams();
+    const navigate = useNavigate();
 
-    // Simulate booking submit (replace with API call)
-    setSubmitting(true);
-    const bookingPayload = {
-      serviceId: service.id,
-      serviceName: service.name,
-      customer: {
-        name: form.fullName,
-        phone: form.phone,
-        address: form.address,
-        pincode: form.pincode
-      },
-      date: form.date,
-      timeSlot: form.timeSlot,
-      addons: Object.keys(form.addons).filter(k => form.addons[k]),
-      notes: form.notes,
-      total: calcTotal()
+    const service = useMemo(() => findServiceBySlug(slug), [slug]);
+
+    const [form, setForm] = useState({
+        fullName: "",
+        phone: "",
+        address: "",
+        pincode: "",
+        date: todayISO(),
+        timeSlot: "",
+        packageType: "standard",
+        addons: {},
+        notes: "",
+    });
+    const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
+    const [serverError, setServerError] = useState("");
+    const [success, setSuccess] = useState(null);
+
+    if (!service) {
+        return (
+            <div className="booking-page">
+                <div className="container">
+                    <div className="card booking-empty">
+                        <h2>Service not found</h2>
+                        <p>The service you tried to book doesn't exist.</p>
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={() => navigate("/")}
+                        >
+                            <FiArrowLeft aria-hidden="true" /> Back to home
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const onChange = (e) => {
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
-    // In production call API: POST /api/bookings
-    // fetch('/api/bookings', { method:'POST', body: JSON.stringify(bookingPayload)... })
-    console.log("Booking payload", bookingPayload);
+    const onToggleAddon = (key) => {
+        setForm((prev) => ({
+            ...prev,
+            addons: { ...prev.addons, [key]: !prev.addons[key] },
+        }));
+    };
 
-    // simulate success
-    setTimeout(() => {
-      setSubmitting(false);
-      setSuccess({
-        id: `BK-${Math.floor(Math.random() * 900000 + 100000)}`,
-        ...bookingPayload
-      });
+    const calcTotal = () => {
+        let total = Number(service.basePrice || 0);
+        total += PACKAGE_PRICE_DELTA[form.packageType] || 0;
+        for (const a of ADDONS) {
+            if (form.addons[a.key]) total += a.price;
+        }
+        return total;
+    };
 
-      // optionally redirect to /bookings or confirmation page:
-      // navigate(`/booking-success/${bookingId}`);
-    }, 700);
-  };
+    const validate = () => {
+        const errs = {};
+        if (!form.fullName.trim()) errs.fullName = "Please enter your name";
+        if (!/^[6-9]\d{9}$/.test(form.phone))
+            errs.phone = "Enter a valid 10-digit Indian mobile number";
+        if (!form.address.trim() || form.address.trim().length < 5)
+            errs.address = "Address is required";
+        if (!/^\d{6}$/.test(form.pincode)) errs.pincode = "Enter a valid 6-digit PIN";
+        if (!form.date) errs.date = "Please pick a date";
+        else if (new Date(form.date) < new Date(todayISO()))
+            errs.date = "Date can't be in the past";
+        if (!form.timeSlot) errs.timeSlot = "Please choose a time slot";
+        return errs;
+    };
 
-  return (
-    <div className="booking-page">
-      <div className="booking-container">
-        {/* Left card: Service info */}
-        <aside className="card service-card">
-          <img
-            src={process.env.PUBLIC_URL + service.image}
-            alt={service.name}
-            onError={(e) => { e.target.onerror = null; e.target.src = process.env.PUBLIC_URL + "/placeholder.jpg"; }}
-            className="service-hero"
-          />
-          <div className="service-meta">
-            <h1>{service.name}</h1>
-            <p className="short">{service.short}</p>
-            <div className="price-row">
-              <span className="price">Starting at ₹{service.basePrice}</span>
-              <span className="duration">/{service.durationMins} mins</span>
+    const persistSuccess = (booking, { local } = {}) => {
+        setSuccess({
+            id: booking.id || booking._id || `BK-${Date.now().toString(36).toUpperCase()}`,
+            serviceName: service.name,
+            scheduledAt: booking.scheduledAt || toScheduledAt(form.date, form.timeSlot),
+            date: form.date,
+            timeSlot: form.timeSlot,
+            address: form.address,
+            phone: form.phone,
+            total: calcTotal(),
+            local: Boolean(local),
+        });
+    };
+
+    const onSubmit = async (e) => {
+        e.preventDefault();
+        setServerError("");
+        const errs = validate();
+        setErrors(errs);
+        if (Object.keys(errs).length > 0) return;
+
+        const scheduledAt = toScheduledAt(form.date, form.timeSlot);
+        const payload = {
+            scheduledAt,
+            address: form.address.trim(),
+            pincode: form.pincode.trim(),
+            phone: form.phone.trim(),
+            notes: form.notes.trim() || undefined,
+        };
+
+        setSubmitting(true);
+
+        if (!isAuthed()) {
+            // Not logged in — keep UX smooth by simulating success locally,
+            // but tell the user clearly that bookings won't sync to the backend.
+            setTimeout(() => {
+                setSubmitting(false);
+                persistSuccess({}, { local: true });
+            }, 500);
+            return;
+        }
+
+        try {
+            const backendServiceId = service.backendId || (await findBackendServiceId(service.name));
+            if (!backendServiceId) {
+                // Backend is reachable but has no Service record matching this catalog item.
+                persistSuccess({}, { local: true });
+                setSubmitting(false);
+                return;
+            }
+
+            const res = await api.post(
+                "/api/bookings",
+                { serviceId: backendServiceId, ...payload },
+                { auth: true }
+            );
+            persistSuccess(res?.booking || {}, { local: false });
+        } catch (err) {
+            if (err.status === 401) {
+                setServerError("Your session expired. Please log in again.");
+                setTimeout(() => navigate("/login"), 1200);
+            } else {
+                setServerError(err.message || "Could not create booking. Please try again.");
+            }
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="booking-page">
+            <div className="container">
+                <button
+                    type="button"
+                    className="booking-back"
+                    onClick={() => navigate(-1)}
+                >
+                    <FiArrowLeft aria-hidden="true" /> Back
+                </button>
+
+                {success ? (
+                    <SuccessCard success={success} navigate={navigate} />
+                ) : (
+                    <div className="booking-grid">
+                        <SummaryCard service={service} total={calcTotal()} />
+
+                        <form
+                            className="card booking-form"
+                            onSubmit={onSubmit}
+                            noValidate
+                        >
+                            <h1 className="booking-form-title">Book {service.name}</h1>
+                            <p className="booking-form-sub">
+                                Tell us a few details and we'll confirm the booking instantly.
+                            </p>
+
+                            {!isAuthed() && (
+                                <div className="banner banner-info">
+                                    <FiInfo aria-hidden="true" style={{ flex: "0 0 auto", marginTop: 2 }} />
+                                    <span>
+                                        You're booking as a guest.{" "}
+                                        <a href="/login">Log in</a> to save bookings to your account.
+                                    </span>
+                                </div>
+                            )}
+
+                            {serverError && (
+                                <div className="banner banner-error" role="alert">
+                                    {serverError}
+                                </div>
+                            )}
+
+                            <div className="booking-form-body">
+                                <div>
+                                    <label className="label">Choose package</label>
+                                    <div className="package-row">
+                                        <label
+                                            className={
+                                                "package-card" +
+                                                (form.packageType === "standard" ? " is-selected" : "")
+                                            }
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="packageType"
+                                                value="standard"
+                                                checked={form.packageType === "standard"}
+                                                onChange={onChange}
+                                            />
+                                            <div>
+                                                <strong>Standard</strong>
+                                                <div className="package-sub">
+                                                    Base service · ₹{service.basePrice}
+                                                </div>
+                                            </div>
+                                        </label>
+                                        <label
+                                            className={
+                                                "package-card" +
+                                                (form.packageType === "premium" ? " is-selected" : "")
+                                            }
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="packageType"
+                                                value="premium"
+                                                checked={form.packageType === "premium"}
+                                                onChange={onChange}
+                                            />
+                                            <div>
+                                                <strong>Premium</strong>
+                                                <div className="package-sub">
+                                                    Add-ons & priority · +₹{PACKAGE_PRICE_DELTA.premium}
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="booking-row-2">
+                                    <div className="field">
+                                        <label className="label" htmlFor="bk-date">Date</label>
+                                        <input
+                                            id="bk-date"
+                                            type="date"
+                                            name="date"
+                                            min={todayISO()}
+                                            value={form.date}
+                                            onChange={onChange}
+                                            className="input"
+                                        />
+                                        {errors.date && <div className="field-error">{errors.date}</div>}
+                                    </div>
+                                    <div className="field">
+                                        <label className="label" htmlFor="bk-slot">Time slot</label>
+                                        <select
+                                            id="bk-slot"
+                                            name="timeSlot"
+                                            value={form.timeSlot}
+                                            onChange={onChange}
+                                            className="select"
+                                        >
+                                            <option value="">Choose a slot</option>
+                                            {TIME_SLOTS.map((s) => (
+                                                <option key={s} value={s}>{s}</option>
+                                            ))}
+                                        </select>
+                                        {errors.timeSlot && (
+                                            <div className="field-error">{errors.timeSlot}</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="field">
+                                    <label className="label" htmlFor="bk-name">Full name</label>
+                                    <input
+                                        id="bk-name"
+                                        className="input"
+                                        name="fullName"
+                                        value={form.fullName}
+                                        onChange={onChange}
+                                        placeholder="Your full name"
+                                        autoComplete="name"
+                                    />
+                                    {errors.fullName && (
+                                        <div className="field-error">{errors.fullName}</div>
+                                    )}
+                                </div>
+
+                                <div className="booking-row-2">
+                                    <div className="field">
+                                        <label className="label" htmlFor="bk-phone">Phone</label>
+                                        <input
+                                            id="bk-phone"
+                                            className="input"
+                                            name="phone"
+                                            value={form.phone}
+                                            onChange={onChange}
+                                            placeholder="10-digit mobile"
+                                            inputMode="numeric"
+                                            autoComplete="tel"
+                                        />
+                                        {errors.phone && (
+                                            <div className="field-error">{errors.phone}</div>
+                                        )}
+                                    </div>
+                                    <div className="field">
+                                        <label className="label" htmlFor="bk-pin">PIN code</label>
+                                        <input
+                                            id="bk-pin"
+                                            className="input"
+                                            name="pincode"
+                                            value={form.pincode}
+                                            onChange={onChange}
+                                            placeholder="6-digit PIN"
+                                            inputMode="numeric"
+                                            autoComplete="postal-code"
+                                        />
+                                        {errors.pincode && (
+                                            <div className="field-error">{errors.pincode}</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="field">
+                                    <label className="label" htmlFor="bk-addr">Address</label>
+                                    <textarea
+                                        id="bk-addr"
+                                        className="textarea"
+                                        name="address"
+                                        rows={2}
+                                        value={form.address}
+                                        onChange={onChange}
+                                        placeholder="Flat / House no., street, landmark"
+                                        autoComplete="street-address"
+                                    />
+                                    {errors.address && (
+                                        <div className="field-error">{errors.address}</div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="label">Add-ons</label>
+                                    <div className="addons-row">
+                                        {ADDONS.map((a) => (
+                                            <label
+                                                key={a.key}
+                                                className={
+                                                    "addon-card" +
+                                                    (form.addons[a.key] ? " is-selected" : "")
+                                                }
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!form.addons[a.key]}
+                                                    onChange={() => onToggleAddon(a.key)}
+                                                />
+                                                <div>
+                                                    <strong>{a.label}</strong>
+                                                    <div className="addon-price">+ ₹{a.price}</div>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="field">
+                                    <label className="label" htmlFor="bk-notes">
+                                        Notes (optional)
+                                    </label>
+                                    <input
+                                        id="bk-notes"
+                                        className="input"
+                                        name="notes"
+                                        value={form.notes}
+                                        onChange={onChange}
+                                        placeholder="Any special instructions"
+                                        maxLength={200}
+                                    />
+                                </div>
+
+                                <div className="booking-summary-bar">
+                                    <div>
+                                        <div className="booking-summary-label">Total payable</div>
+                                        <div className="booking-total">
+                                            <strong>₹{calcTotal()}</strong>
+                                        </div>
+                                    </div>
+                                    <div className="booking-actions">
+                                        <button
+                                            type="submit"
+                                            className="btn btn-primary btn-lg booking-confirm"
+                                            disabled={submitting}
+                                        >
+                                            {submitting ? (
+                                                <>
+                                                    <span className="spinner" aria-hidden="true" />
+                                                    Booking…
+                                                </>
+                                            ) : (
+                                                "Confirm booking"
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                )}
             </div>
+        </div>
+    );
+}
 
-            <div className="badges">
-              <span className="badge">Verified Pros</span>
-              <span className="badge">Instant Booking</span>
+function SummaryCard({ service, total }) {
+    return (
+        <aside className="card booking-summary">
+            <div className="booking-img-wrap">
+                <img
+                    src={`${process.env.PUBLIC_URL}${service.image}`}
+                    alt={service.name}
+                    onError={(e) => {
+                        if (e.target.dataset.fb === "1") return;
+                        e.target.dataset.fb = "1";
+                        e.target.src = FALLBACK_IMG;
+                    }}
+                />
             </div>
+            <div className="booking-summary-body">
+                <h2 className="booking-service-name">{service.name}</h2>
+                <p className="booking-service-desc">{service.description}</p>
 
-            <hr />
-            <h4>What's included</h4>
-            <ul className="points">
-              <li>Experienced & background-checked professionals</li>
-              <li>Flexible timings</li>
-              <li>Quality guarantee</li>
-            </ul>
-          </div>
+                <div className="booking-price-row">
+                    <span className="booking-price">₹{total}</span>
+                    <span className="booking-duration">
+                        <FiClock aria-hidden="true" /> ~{service.durationMins} mins
+                    </span>
+                </div>
+
+                <div className="booking-badges">
+                    <span className="pill pill-confirmed">
+                        <FiShield aria-hidden="true" /> Verified pros
+                    </span>
+                    <span className="pill pill-completed">
+                        <FiCheckCircle aria-hidden="true" /> Re-do guarantee
+                    </span>
+                </div>
+
+                <hr className="booking-hr" />
+                <h3 className="booking-included-title">What's included</h3>
+                <ul className="booking-included">
+                    <li>Background-verified, trained professionals</li>
+                    <li>Flexible rescheduling before the visit</li>
+                    <li>Pay only the price you see — no surprises</li>
+                </ul>
+            </div>
         </aside>
+    );
+}
 
-        {/* Right card: Booking form */}
-        <main className="card form-card">
-          {!success ? (
-            <>
-              <h2>Book {service.name}</h2>
-              <form onSubmit={onSubmit} noValidate>
-                {/* Package selection */}
-                <label className="label">Choose Package</label>
-                <div className="package-row">
-                  <label className={`package ${form.packageType === "standard" ? "selected" : ""}`}>
-                    <input type="radio" name="packageType" value="standard" checked={form.packageType === "standard"} onChange={onChange} />
-                    <div>
-                      <strong>Standard</strong>
-                      <div className="muted">Basic service — ₹{service.basePrice}</div>
-                    </div>
-                  </label>
+function SuccessCard({ success, navigate }) {
+    const formatDateTime = () => {
+        try {
+            const d = new Date(success.scheduledAt);
+            return d.toLocaleString(undefined, {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+        } catch {
+            return `${success.date} · ${success.timeSlot}`;
+        }
+    };
 
-                  <label className={`package ${form.packageType === "premium" ? "selected" : ""}`}>
-                    <input type="radio" name="packageType" value="premium" checked={form.packageType === "premium"} onChange={onChange} />
-                    <div>
-                      <strong>Premium</strong>
-                      <div className="muted">Includes add-ons & priority — +₹299</div>
-                    </div>
-                  </label>
+    return (
+        <div className="card booking-success">
+            <span className="success-icon" aria-hidden="true">
+                <FiCheckCircle />
+            </span>
+            <h2>Booking confirmed</h2>
+            <p className="success-note">
+                We've received your request. A specialist will reach out before the visit.
+            </p>
+
+            <ul className="success-meta">
+                <li>
+                    <span>Booking ID</span> <strong>{success.id}</strong>
+                </li>
+                <li>
+                    <span>Service</span> <strong>{success.serviceName}</strong>
+                </li>
+                <li>
+                    <span>When</span> <strong>{formatDateTime()}</strong>
+                </li>
+                <li>
+                    <span>Total</span> <strong>₹{success.total}</strong>
+                </li>
+            </ul>
+
+            {success.local && (
+                <div className="banner banner-info">
+                    <FiInfo aria-hidden="true" style={{ flex: "0 0 auto", marginTop: 2 }} />
+                    <span>
+                        Saved locally only. Log in &amp; ensure the service is seeded in
+                        the backend to sync this booking to your account.
+                    </span>
                 </div>
+            )}
 
-                {/* Date & Time */}
-                <div className="row">
-                  <div className="field">
-                    <label className="label">Select Date</label>
-                    <input type="date" name="date" value={form.date} min={todayDateISO()} onChange={onChange} />
-                    {errors.date && <div className="error">{errors.date}</div>}
-                  </div>
-
-                  <div className="field">
-                    <label className="label">Time Slot</label>
-                    <select name="timeSlot" value={form.timeSlot} onChange={onChange}>
-                      <option value="">Choose slot</option>
-                      {timeSlots.map(ts => <option key={ts} value={ts}>{ts}</option>)}
-                    </select>
-                    {errors.timeSlot && <div className="error">{errors.timeSlot}</div>}
-                  </div>
-                </div>
-
-                {/* Contact & Address */}
-                <div className="field">
-                  <label className="label">Full Name</label>
-                  <input name="fullName" value={form.fullName} onChange={onChange} placeholder="Your full name" />
-                  {errors.fullName && <div className="error">{errors.fullName}</div>}
-                </div>
-
-                <div className="row">
-                  <div className="field">
-                    <label className="label">Phone</label>
-                    <input name="phone" value={form.phone} onChange={onChange} placeholder="10 digit mobile number" />
-                    {errors.phone && <div className="error">{errors.phone}</div>}
-                  </div>
-
-                  <div className="field">
-                    <label className="label">PIN Code</label>
-                    <input name="pincode" value={form.pincode} onChange={onChange} placeholder="110001" />
-                    {errors.pincode && <div className="error">{errors.pincode}</div>}
-                  </div>
-                </div>
-
-                <div className="field">
-                  <label className="label">Address</label>
-                  <textarea name="address" value={form.address} onChange={onChange} rows="2" placeholder="Flat / House no, Street, Landmark"></textarea>
-                  {errors.address && <div className="error">{errors.address}</div>}
-                </div>
-
-                {/* Add-ons */}
-                <div className="addons">
-                  <label className="label">Add-ons</label>
-                  <div className="addons-row">
-                    {addonsList.map(a => (
-                      <label key={a.key} className="addon">
-                        <input type="checkbox" checked={!!form.addons[a.key]} onChange={() => onToggleAddon(a.key)} />
-                        <div>
-                          <strong>{a.label}</strong>
-                          <div className="muted">+ ₹{a.price}</div>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="field">
-                  <label className="label">Notes (optional)</label>
-                  <input name="notes" value={form.notes} onChange={onChange} placeholder="Any special instructions" />
-                </div>
-
-                {/* Price summary + CTA */}
-                <div className="summary">
-                  <div>
-                    <div>Service: <strong>{service.name}</strong></div>
-                    <div>Add-ons: <strong>{Object.keys(form.addons).filter(k => form.addons[k]).length}</strong></div>
-                  </div>
-                  <div className="total">Total: <strong>₹{calcTotal()}</strong></div>
-                </div>
-
-                <div className="actions">
-                  <button className="btn primary" type="submit" disabled={submitting}>{submitting ? "Booking..." : "Confirm Booking"}</button>
-                  <button type="button" className="btn" onClick={() => navigate(-1)}>Back</button>
-                </div>
-              </form>
-            </>
-          ) : (
-            // Success state
-            <div className="success">
-              <h3>Booking Confirmed</h3>
-              <p>Thank you, <strong>{success.customer.name}</strong>! Your booking ID is <strong>{success.id}</strong>.</p>
-              <p>
-                Service: <strong>{success.serviceName}</strong><br />
-                Date: <strong>{success.date}</strong> | Slot: <strong>{success.timeSlot}</strong><br />
-                Total Paid: <strong>₹{success.total}</strong>
-              </p>
-              <div className="actions">
-                <button className="btn primary" onClick={() => navigate("/")}>Back to Home</button>
-                <button className="btn" onClick={() => {
-                  // could navigate to "my bookings"
-                  navigate("/my-bookings");
-                }}>View My Bookings</button>
-              </div>
+            <div className="booking-actions" style={{ justifyContent: "center" }}>
+                <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => navigate("/")}
+                >
+                    Back to home
+                </button>
+                {!success.local && (
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => navigate("/my-bookings")}
+                    >
+                        View my bookings
+                    </button>
+                )}
             </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
+        </div>
+    );
 }

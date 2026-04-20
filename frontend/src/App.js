@@ -1,42 +1,51 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
+import Login from "./components/Login";
+
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
-import Login from "./components/Login";
-import './Global.css';
 import BookingPage from "./pages/BookingPage";
+import MyBookings from "./pages/MyBookings";
 
-function App() {
-  return (
-    <Router>
-      <div className="app-container">
-        <Navbar />
+import "./App.css";
+import "./Global.css";
 
-        <main>
-          <Routes>
-            <Route path="/" element={
-              <>
-                <Home />
-                <About />
-                <Services />
-                <br />
-                <Contact />
-              </>
-            } />
-            <Route path="/booking/:id" element={<BookingPage />} />
-            <Route path="/login" element={<Login />} />
-            
-          </Routes>
-        </main>
-
-        <Footer />
-      </div>
-    </Router>
-  );
+function HomePage() {
+    return (
+        <>
+            <Home />
+            <About />
+            <Services />
+            <Contact />
+        </>
+    );
 }
 
-export default App;
+export default function App() {
+    return (
+        <Router>
+            <ScrollToTop />
+            <div className="app-container">
+                <Navbar />
+
+                <main>
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/booking/:id" element={<BookingPage />} />
+                        <Route path="/my-bookings" element={<MyBookings />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="*" element={<HomePage />} />
+                    </Routes>
+                </main>
+
+                <Footer />
+            </div>
+        </Router>
+    );
+}
