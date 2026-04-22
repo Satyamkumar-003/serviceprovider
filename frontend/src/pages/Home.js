@@ -1,49 +1,151 @@
-import React from "react";
-import "./Home.css"; // Linking CSS file
-import bgvideo from "./assets/bgvideo.mp4"; // Importing the video correctly
+import React, { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import {
+  FiShield,
+  FiClock,
+  FiDollarSign,
+  FiHeadphones,
+  FiArrowRight,
+  FiCheck,
+  FiCalendar,
+} from "react-icons/fi";
+import "./Home.css";
 
-const Home = () => {
+const BG_VIDEO = `${process.env.PUBLIC_URL}/bg-video.mp4`;
+
+const REASONS = [
+  {
+    icon: <FiShield aria-hidden="true" />,
+    title: "Verified Professionals",
+    desc: "Every helper is background-checked, trained, and rated by real customers.",
+  },
+  {
+    icon: <FiDollarSign aria-hidden="true" />,
+    title: "Transparent Pricing",
+    desc: "Upfront prices, no hidden fees. Pay only for what you book.",
+  },
+  {
+    icon: <FiClock aria-hidden="true" />,
+    title: "Flexible Booking",
+    desc: "Pick a date, slot and add-ons. Reschedule any time before the visit.",
+  },
+  {
+    icon: <FiHeadphones aria-hidden="true" />,
+    title: "Real Human Support",
+    desc: "Our team is one tap away — chat, call or email, 7 days a week.",
+  },
+];
+
+const STATS = [
+  { value: "10k+", label: "Happy customers" },
+  { value: "500+", label: "Verified pros" },
+  { value: "4.8★", label: "Average rating" },
+  { value: "30 min", label: "Avg. response" },
+];
+
+const goToServices = (e) => {
+  e.preventDefault();
+  const el = document.getElementById("services");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const readLoggedIn = () => Boolean(localStorage.getItem("token"));
+
+export default function Home() {
+  const location = useLocation();
+  const [loggedIn, setLoggedIn] = useState(readLoggedIn);
+
+  useEffect(() => {
+    setLoggedIn(readLoggedIn());
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const sync = () => setLoggedIn(readLoggedIn());
+    const onStorage = (e) => {
+      if (e.key === "token" || e.key === "user") sync();
+    };
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("homehelper-auth-change", sync);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("homehelper-auth-change", sync);
+    };
+  }, []);
+
   return (
-    <section id="home" className="home-section">
-      {/* Background Video */}
-      <video autoPlay loop muted className="background-video">
-        <source src={bgvideo} type="video/mp4" />
-      </video>
+    <section id="home" className="hero">
+      <video
+        className="hero-video"
+        src={BG_VIDEO}
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      />
+      <div className="hero-overlay" aria-hidden="true" />
 
-      {/* Overlay Text */}
-      <div className="overlay">
-        <h1>Your Trusted Home Service Partner</h1>
-        <p>
-          Find reliable professionals for cooking, caretaking, cleaning, and more.
-          Quality service, verified experts, and hassle-free bookings at your fingertips.
+      <div className="hero-content container">
+        <span className="hero-eyebrow">
+          <FiCheck aria-hidden="true" /> Trusted by 10,000+ households
+        </span>
+        <h1 className="hero-title">
+          Home services, <span className="hero-title-accent">handled.</span>
+        </h1>
+        <p className="hero-lede">
+          Book vetted professionals for cleaning, cooking, caretaking, plumbing
+          and electrical work — in minutes, with one transparent price.
         </p>
-        <a href="#services" className="btn">Explore Services</a>
+
+        <div className="hero-actions">
+          <a href="#services" className="btn btn-accent btn-lg" onClick={goToServices}>
+            Explore services <FiArrowRight aria-hidden="true" />
+          </a>
+          {loggedIn ? (
+            <Link
+              to="/my-bookings"
+              className="btn btn-secondary btn-lg hero-btn-secondary"
+            >
+              My bookings <FiCalendar aria-hidden="true" />
+            </Link>
+          ) : (
+            <Link to="/login" className="btn btn-secondary btn-lg hero-btn-secondary">
+              Sign up free
+            </Link>
+          )}
+        </div>
+
+        <div className="hero-stats" aria-label="Key statistics">
+          {STATS.map((s) => (
+            <div className="hero-stat" key={s.label}>
+              <div className="hero-stat-value">{s.value}</div>
+              <div className="hero-stat-label">{s.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Why Choose Us Section */}
-      <section className="why-choose-us">
-        <h2>Why Choose HomeHelper?</h2>
-        <div className="reasons-grid">
-          <div className="reason">
-            <h3>Verified Professionals</h3>
-            <p>All service providers are background-checked and trained for quality service.</p>
-          </div>
-          <div className="reason">
-            <h3>Affordable Pricing</h3>
-            <p>Transparent pricing with no hidden costs.</p>
-          </div>
-          <div className="reason">
-            <h3>Easy Booking</h3>
-            <p>Simple and quick service booking with flexible scheduling.</p>
-          </div>
-          <div className="reason">
-            <h3>Reliable Support</h3>
-            <p>24/7 customer support to assist with your queries.</p>
-          </div>
+      <section id="why" className="why section">
+        <div className="container text-center">
+          <span className="section-eyebrow">Why HomeHelper</span>
+          <h2 className="section-title">Built for trust, designed for ease.</h2>
+          <p className="section-lede">
+            We combine background-verified professionals with a booking
+            experience that respects your time.
+          </p>
+        </div>
+
+        <div className="container why-grid">
+          {REASONS.map((r) => (
+            <article className="why-card" key={r.title}>
+              <div className="why-icon">{r.icon}</div>
+              <h3 className="why-title">{r.title}</h3>
+              <p className="why-desc">{r.desc}</p>
+            </article>
+          ))}
         </div>
       </section>
     </section>
   );
-};
-
-export default Home;
+}

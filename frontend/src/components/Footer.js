@@ -1,86 +1,126 @@
 import React from "react";
-import "./Footer.css";
 import { Link } from "react-router-dom";
-import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn } from "react-icons/fa";
+import {
+    FaFacebookF,
+    FaInstagram,
+    FaLinkedinIn,
+    FaTwitter,
+} from "react-icons/fa";
+import { FiMail, FiPhone, FiMapPin } from "react-icons/fi";
+import "./Footer.css";
 
-function Footer() {
-  return (
-    <footer className="footer">
-      <div className="footer-container">
+const SERVICE_LINKS = [
+    { label: "Home Cleaning", slug: "home-cleaning" },
+    { label: "Cooking", slug: "cooking" },
+    { label: "Caretaker", slug: "caretaker" },
+    { label: "Electrician", slug: "electrician" },
+    { label: "Plumbing", slug: "plumbing" },
+];
 
-        {/* Brand Section */}
-        <div className="footer-section brand">
-          <h2>HomeHelper</h2>
-          <p>Your trusted partner for home services anytime, anywhere.</p>
-        </div>
+const QUICK_LINKS = [
+    { label: "Home", href: "#home" },
+    { label: "About", href: "#about" },
+    { label: "Services", href: "#services" },
+    { label: "Contact", href: "#contact" },
+];
 
-        {/* Quick Links */}
-        <div className="footer-section">
-          <h3>Quick Links</h3>
-          <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/services">Services</Link></li>
-            <li><Link to="/about">About us</Link></li>
-            <li><Link to="/contact">Contact</Link></li>
-          </ul>
-        </div>
+export default function Footer() {
+    return (
+        <footer className="footer">
+            <div className="container footer-container">
+                <div className="footer-section footer-brand">
+                    <Link to="/" className="footer-brand-row" aria-label="HomeHelper home">
+                        <span className="footer-brand-mark">HH</span>
+                        <span className="footer-brand-name">HomeHelper</span>
+                    </Link>
+                    <p className="footer-tag">
+                        Trusted home services on demand — verified pros, transparent pricing,
+                        zero stress.
+                    </p>
 
-        {/* Services Section */}
-        <div className="footer-section">
-          <h3>Services</h3>
-          <ul>
-            <li><Link to="/services/cleaning">Home Cleaning</Link></li>
-            <li><Link to="/services/plumbing">Plumbing</Link></li>
-            <li><Link to="/services/electrician">Electrician</Link></li>
-            <li><Link to="/services/cooking">Cooking</Link></li>
-          </ul>
-        </div>
+                    <div className="footer-socials">
+                        <a
+                            href="https://facebook.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Facebook"
+                        >
+                            <FaFacebookF />
+                        </a>
+                        <a
+                            href="https://twitter.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Twitter"
+                        >
+                            <FaTwitter />
+                        </a>
+                        <a
+                            href="https://instagram.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Instagram"
+                        >
+                            <FaInstagram />
+                        </a>
+                        <a
+                            href="https://linkedin.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="LinkedIn"
+                        >
+                            <FaLinkedinIn />
+                        </a>
+                    </div>
+                </div>
 
-        {/* Contact + Social */}
-        <div className="footer-section contact">
-          <h3>Contact</h3>
-          <p>📍 Patiala, Punjab, India</p>
-          <p>📞 +91 81466 11766</p>
-          <p>📩 support@homehelper.com</p>
+                <div className="footer-section">
+                    <h3 className="footer-heading">Quick links</h3>
+                    <ul className="footer-list">
+                        {QUICK_LINKS.map((l) => (
+                            <li key={l.href}>
+                                <a href={`/${l.href}`}>{l.label}</a>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
 
-          <div className="social-icons">
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaFacebookF />
-            </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaTwitter />
-            </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaInstagram />
-            </a>
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FaLinkedinIn />
-            </a>
-          </div>
-        </div>
-      </div>
+                <div className="footer-section">
+                    <h3 className="footer-heading">Services</h3>
+                    <ul className="footer-list">
+                        {SERVICE_LINKS.map((s) => (
+                            <li key={s.slug}>
+                                <Link to={`/booking/${s.slug}`}>{s.label}</Link>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
 
-      <div className="footer-bottom">
-        <p>© 2025 HomeHelper. All Rights Reserved.</p>
-      </div>
-    </footer>
-  );
+                <div className="footer-section">
+                    <h3 className="footer-heading">Reach us</h3>
+                    <ul className="footer-list footer-contact">
+                        <li>
+                            <FiMapPin aria-hidden="true" />
+                            <span>Patiala, Punjab, India</span>
+                        </li>
+                        <li>
+                            <FiPhone aria-hidden="true" />
+                            <a href="tel:+918146611766">+91 81466 11766</a>
+                        </li>
+                        <li>
+                            <FiMail aria-hidden="true" />
+                            <a href="mailto:support@homehelper.com">support@homehelper.com</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div className="footer-bottom">
+                <div className="container footer-bottom-row">
+                    <span>© {new Date().getFullYear()} HomeHelper. All rights reserved.</span>
+                    <span className="footer-bottom-meta">Built with care · Made in India</span>
+                </div>
+            </div>
+        </footer>
+    );
 }
-
-export default Footer;

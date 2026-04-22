@@ -1,110 +1,127 @@
-/* Services.css */
-
-.services-section {
-  padding: 4rem 0;
-  background-color: #f9f9f9;
+.services {
+  background: var(--surface);
 }
 
-.services-section .service-container {
-  display: flex;
-  flex-direction: column;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.services-section h1 {
-  text-align: center;
-  font-size: 2.5rem;
-  color: #333;
-  margin-bottom: 1rem;
-}
-
-.services-section p {
-  text-align: center;
-  color: #666;
-  font-size: 1.1rem;
-  max-width: 700px;
-  margin: 0 auto 3rem;
-}
-
-.service-list {
+.service-grid {
+  margin-top: var(--space-8);
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
 }
 
 .service-card {
-  background: white;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--ink-200);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--speed) var(--ease),
+              box-shadow var(--speed) var(--ease),
+              border-color var(--speed) var(--ease);
 }
 
 .service-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--brand-200);
 }
 
-.service-image {
+.service-img-wrap {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--ink-100);
+}
+
+.service-img-wrap img {
   width: 100%;
-  height: 200px;
+  height: 100%;
   object-fit: cover;
-  display: block;
+  transition: transform 600ms var(--ease);
 }
 
-.service-info {
-  padding: 1.5rem;
+.service-card:hover .service-img-wrap img {
+  transform: scale(1.04);
 }
 
-.service-info h3 {
-  font-size: 1.3rem;
-  color: #333;
-  margin-bottom: 0.75rem;
+.service-price-badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 4px 10px;
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--white);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(6px);
 }
 
-.service-info p {
-  text-align: left;
-  color: #666;
-  font-size: 0.95rem;
-  margin: 0 0 1.5rem 0;
+.service-body {
+  padding: 1.1rem 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
 }
 
-.btn {
-  display: inline-block;
-  background-color: #4CAF50;
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  text-decoration: none;
+.service-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--ink-900);
+  margin: 0;
 }
 
-.btn:hover {
-  background-color: #45a049;
+.service-desc {
+  margin: 0;
+  color: var(--ink-600);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  flex: 1;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .service-list {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-  
-  .services-section h1 {
-      font-size: 2rem;
-  }
+.service-cta {
+  align-self: flex-start;
+  margin-top: 0.4rem;
 }
 
-@media (max-width: 480px) {
-  .service-list {
-      grid-template-columns: 1fr;
-  }
-  
-  .services-section {
-      padding: 2.5rem 0;
-  }
+.services-note {
+  margin: 1.5rem auto 0;
+  text-align: center;
+  color: var(--ink-500);
+  font-size: 0.85rem;
+}
+
+/* Skeleton */
+.service-card--skeleton {
+  pointer-events: none;
+  border-color: var(--ink-100);
+}
+
+.skeleton-img {
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(90deg, #eef2f7, #f8fafc, #eef2f7);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.skeleton-line {
+  height: 12px;
+  margin: 12px 16px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #eef2f7, #f8fafc, #eef2f7);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.w-50 { width: 50%; }
+.w-70 { width: 70%; }
+.w-90 { width: 90%; }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

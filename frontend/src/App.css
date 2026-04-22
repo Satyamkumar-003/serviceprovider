@@ -1,14 +1,12 @@
-body {
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f8f9fa;
-  color: #333;
-}
+/* App shell — most styles live in Global.css */
 
 .app-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   min-height: 100vh;
+  background: var(--bg-app);
+}
+
+.app-container > main {
+  flex: 1;
 }

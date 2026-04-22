@@ -1,30 +1,18 @@
-import Service from "../models/Service.js";  // ✅ Correct import
-  // Import Service model
+import Service from "../models/Service.js";
+import asyncHandler from "../middleware/asyncHandler.js";
 
-// ✅ Fetch all services
-export const getServices = async (req, res) => {
-    try {
-        const services = await Service.find();
-        res.json(services);
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching services" });
+export const getServices = asyncHandler(async (req, res) => {
+    const services = await Service.find().sort({ createdAt: -1 });
+    res.json(services);
+});
+
+export const addService = asyncHandler(async (req, res) => {
+    const { name, description, image } = req.body;
+
+    if (!name || !description || !image) {
+        return res.status(400).json({ message: "Please fill all fields: name, description, image" });
     }
-};
 
-// ✅ Add a new service
-export const addService = async (req, res) => {
-    try {
-        const { name, description, image } = req.body;
-
-        if (!name || !description || !image) {
-            return res.status(400).json({ message: "Please fill all fields" });
-        }
-
-        const newService = new Service({ name, description, image });
-        await newService.save();
-
-        res.status(201).json({ message: "Service added successfully", newService });
-    } catch (error) {
-        res.status(500).json({ message: "Error adding service" });
-    }
-};
+    const newService = await Service.create({ name, description, image });
+    res.status(201).json({ message: "Service added successfully", service: newService });
+});
