@@ -134,11 +134,7 @@ export default function BookingPage() {
         return errs;
     };
 
-<<<<<<< HEAD
     const persistSuccess = (booking, { local, localReason } = {}) => {
-=======
-    const persistSuccess = (booking, { local } = {}) => {
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
         setSuccess({
             id: booking.id || booking._id || `BK-${Date.now().toString(36).toUpperCase()}`,
             serviceName: service.name,
@@ -149,10 +145,7 @@ export default function BookingPage() {
             phone: form.phone,
             total: calcTotal(),
             local: Boolean(local),
-<<<<<<< HEAD
             localReason: localReason || (local ? "guest" : null),
-=======
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
         });
     };
 
@@ -175,18 +168,10 @@ export default function BookingPage() {
         setSubmitting(true);
 
         if (!isAuthed()) {
-<<<<<<< HEAD
             // Guest: show confirmation UI only; nothing is POSTed to the API.
             setTimeout(() => {
                 setSubmitting(false);
                 persistSuccess({}, { local: true, localReason: "guest" });
-=======
-            // Not logged in — keep UX smooth by simulating success locally,
-            // but tell the user clearly that bookings won't sync to the backend.
-            setTimeout(() => {
-                setSubmitting(false);
-                persistSuccess({}, { local: true });
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
             }, 500);
             return;
         }
@@ -194,16 +179,11 @@ export default function BookingPage() {
         try {
             const backendServiceId = service.backendId || (await findBackendServiceId(service.name));
             if (!backendServiceId) {
-<<<<<<< HEAD
                 setServerError(
                     "No matching service was found in the database, so this booking cannot be saved. " +
                         "Redeploy the API (it auto-seeds services on startup) or add services in MongoDB " +
                         "with the same names as on the website (e.g. \"Cooking Service\")."
                 );
-=======
-                // Backend is reachable but has no Service record matching this catalog item.
-                persistSuccess({}, { local: true });
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
                 setSubmitting(false);
                 return;
             }
@@ -579,21 +559,12 @@ function SuccessCard({ success, navigate }) {
                 </li>
             </ul>
 
-<<<<<<< HEAD
             {success.local && success.localReason === "guest" && (
                 <div className="banner banner-info">
                     <FiInfo aria-hidden="true" style={{ flex: "0 0 auto", marginTop: 2 }} />
                     <span>
                         Saved on this device only — not sent to the server.{" "}
                         <a href="/login">Log in</a> and confirm again to save bookings to your account.
-=======
-            {success.local && (
-                <div className="banner banner-info">
-                    <FiInfo aria-hidden="true" style={{ flex: "0 0 auto", marginTop: 2 }} />
-                    <span>
-                        Saved locally only. Log in &amp; ensure the service is seeded in
-                        the backend to sync this booking to your account.
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
                     </span>
                 </div>
             )}

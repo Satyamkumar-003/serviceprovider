@@ -245,12 +245,8 @@
   box-shadow: -16px 0 40px rgba(15, 23, 42, 0.08);
   transform: translateX(110%);
   transition: transform var(--speed-slow) var(--ease);
-<<<<<<< HEAD
   /* Above hero / video layers — drawer is rendered outside <header> in JSX */
   z-index: 200;
-=======
-  z-index: 55;
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
   overflow-y: auto;
   display: flex;
 }
@@ -328,11 +324,7 @@
   position: fixed;
   inset: var(--nav-height) 0 0 0;
   background: rgba(15, 23, 42, 0.45);
-<<<<<<< HEAD
   z-index: 199;
-=======
-  z-index: 54;
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
   border: 0;
   cursor: pointer;
   animation: fadeUp 0.2s var(--ease);

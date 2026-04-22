@@ -100,24 +100,17 @@ export default function Navbar() {
         setUser(null);
         setMenuOpen(false);
         setDrawerOpen(false);
-<<<<<<< HEAD
         window.dispatchEvent(new CustomEvent("homehelper-auth-change"));
-=======
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
         navigate("/");
     };
 
     const initials = user ? initialsFor(user.name) : "";
 
-<<<<<<< HEAD
     // Drawer + scrim MUST NOT live inside <header className="nav">: that element uses
     // backdrop-filter, which in Chromium/WebKit creates a containing block for
     // position:fixed children — the drawer gets clipped to the ~70px-tall header.
     return (
         <>
-=======
-    return (
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
         <header className="nav">
             <div className="container nav-inner">
                 <Link to="/" className="nav-brand" aria-label="HomeHelper home">
@@ -207,7 +200,6 @@ export default function Navbar() {
                     </button>
                 </div>
             </div>
-<<<<<<< HEAD
         </header>
 
         {drawerOpen && (
@@ -290,88 +282,5 @@ export default function Navbar() {
             </div>
         </aside>
         </>
-=======
-
-            {drawerOpen && (
-                <button
-                    type="button"
-                    className="drawer-scrim"
-                    aria-label="Close menu"
-                    onClick={() => setDrawerOpen(false)}
-                />
-            )}
-
-            <aside
-                className={"drawer" + (drawerOpen ? " is-open" : "")}
-                aria-hidden={!drawerOpen}
-            >
-                <div className="drawer-inner">
-                    {user ? (
-                        <div className="drawer-user">
-                            <span className="avatar avatar-lg" aria-hidden="true">{initials}</span>
-                            <div>
-                                <div className="drawer-user-name">{user.name}</div>
-                                {user.email && (
-                                    <div className="drawer-user-sub">{user.email}</div>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="drawer-user">
-                            <span className="avatar avatar-lg" aria-hidden="true">
-                                <FiUser />
-                            </span>
-                            <div>
-                                <div className="drawer-user-name">Welcome</div>
-                                <div className="drawer-user-sub">Sign in to manage bookings</div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="drawer-links">
-                        {NAV_ITEMS.map((item) => (
-                            <a
-                                key={item.id}
-                                className="drawer-link"
-                                href={`/#${item.id}`}
-                                onClick={(e) => handleSectionClick(e, item.id)}
-                            >
-                                {item.label}
-                            </a>
-                        ))}
-                        {user && (
-                            <Link
-                                to="/my-bookings"
-                                className="drawer-link"
-                                onClick={() => setDrawerOpen(false)}
-                            >
-                                <FiCalendar aria-hidden="true" /> My bookings
-                            </Link>
-                        )}
-                    </div>
-
-                    <div className="drawer-actions">
-                        {!user ? (
-                            <Link
-                                to="/login"
-                                className="btn btn-primary btn-block"
-                                onClick={() => setDrawerOpen(false)}
-                            >
-                                Login or Sign up
-                            </Link>
-                        ) : (
-                            <button
-                                type="button"
-                                className="btn btn-secondary btn-block"
-                                onClick={handleLogout}
-                            >
-                                <FiLogOut aria-hidden="true" /> Logout
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </aside>
-        </header>
->>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
     );
 }
