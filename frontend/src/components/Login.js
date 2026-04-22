@@ -75,7 +75,11 @@ export default function Login() {
                 if (!res || !res.token) throw new Error("Unexpected server response.");
                 localStorage.setItem("token", res.token);
                 localStorage.setItem("user", JSON.stringify(res.user || {}));
+<<<<<<< HEAD
                 window.dispatchEvent(new CustomEvent("homehelper-auth-change"));
+=======
+                window.dispatchEvent(new StorageEvent("storage", { key: "token" }));
+>>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
                 const redirectTo = location.state?.from || "/";
                 navigate(redirectTo);
             } else {

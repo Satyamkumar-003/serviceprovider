@@ -17,6 +17,11 @@ if (!process.env.JWT_SECRET) {
     console.error("JWT_SECRET is not set. Aborting startup.");
     process.exit(1);
 }
+<<<<<<< HEAD
+=======
+
+connectDB();
+>>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
 
 const app = express();
 

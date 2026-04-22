@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+=======
+import React from "react";
+import { Link } from "react-router-dom";
+>>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
 import {
   FiShield,
   FiClock,
@@ -7,6 +12,7 @@ import {
   FiHeadphones,
   FiArrowRight,
   FiCheck,
+<<<<<<< HEAD
   FiCalendar,
 } from "react-icons/fi";
 import "./Home.css";
@@ -72,6 +78,50 @@ export default function Home() {
     };
   }, []);
 
+=======
+} from "react-icons/fi";
+import "./Home.css";
+
+const BG_VIDEO = `${process.env.PUBLIC_URL}/bg-video.mp4`;
+
+const REASONS = [
+  {
+    icon: <FiShield aria-hidden="true" />,
+    title: "Verified Professionals",
+    desc: "Every helper is background-checked, trained, and rated by real customers.",
+  },
+  {
+    icon: <FiDollarSign aria-hidden="true" />,
+    title: "Transparent Pricing",
+    desc: "Upfront prices, no hidden fees. Pay only for what you book.",
+  },
+  {
+    icon: <FiClock aria-hidden="true" />,
+    title: "Flexible Booking",
+    desc: "Pick a date, slot and add-ons. Reschedule any time before the visit.",
+  },
+  {
+    icon: <FiHeadphones aria-hidden="true" />,
+    title: "Real Human Support",
+    desc: "Our team is one tap away — chat, call or email, 7 days a week.",
+  },
+];
+
+const STATS = [
+  { value: "10k+", label: "Happy customers" },
+  { value: "500+", label: "Verified pros" },
+  { value: "4.8★", label: "Average rating" },
+  { value: "30 min", label: "Avg. response" },
+];
+
+const goToServices = (e) => {
+  e.preventDefault();
+  const el = document.getElementById("services");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+export default function Home() {
+>>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
   return (
     <section id="home" className="hero">
       <video
@@ -102,6 +152,7 @@ export default function Home() {
           <a href="#services" className="btn btn-accent btn-lg" onClick={goToServices}>
             Explore services <FiArrowRight aria-hidden="true" />
           </a>
+<<<<<<< HEAD
           {loggedIn ? (
             <Link
               to="/my-bookings"
@@ -114,6 +165,11 @@ export default function Home() {
               Sign up free
             </Link>
           )}
+=======
+          <Link to="/login" className="btn btn-secondary btn-lg hero-btn-secondary">
+            Sign up free
+          </Link>
+>>>>>>> a25c3281fe06ab6659c22ce42fd9a8d8bee68563
         </div>
 
         <div className="hero-stats" aria-label="Key statistics">
